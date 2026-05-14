@@ -48,7 +48,16 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-      const data = await res.json();
+      
+      let data;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await res.json();
+      } else {
+        const textData = await res.text();
+        throw new Error(`Server returned non-JSON: ${res.status} ${textData.substring(0, 50)}`);
+      }
+
       if (data.error) {
         alert(data.error);
       } else {
@@ -59,8 +68,9 @@ export default function Home() {
         localStorage.setItem('puulp_links', JSON.stringify(newIds));
         fetchStats(newIds);
       }
-    } catch (err) {
-      alert('Failed to shorten URL');
+    } catch (err: any) {
+      console.error("Shortening error:", err);
+      alert(`Failed to shorten URL: ${err.message || 'Unknown error'}`);
     }
     setIsLoading(false);
   };

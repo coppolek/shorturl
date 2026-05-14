@@ -95,20 +95,25 @@ async function startServer() {
     const metadata = await fetchMetadata(url);
     const id = generateId();
     
-    if (db) {
-      await setDoc(doc(db, 'links', id), {
-        originalUrl: url,
-        views: 0,
-        createdAt: new Date().toISOString(),
-        metadata: metadata || null
-      });
-    } else {
-      urlStore.set(id, {
-        originalUrl: url,
-        views: 0,
-        createdAt: new Date(),
-        metadata: metadata || undefined
-      });
+    try {
+      if (db) {
+        await setDoc(doc(db, 'links', id), {
+          originalUrl: url,
+          views: 0,
+          createdAt: new Date().toISOString(),
+          metadata: metadata || null
+        });
+      } else {
+        urlStore.set(id, {
+          originalUrl: url,
+          views: 0,
+          createdAt: new Date(),
+          metadata: metadata || undefined
+        });
+      }
+    } catch (dbError) {
+      console.error("Database write error:", dbError);
+      return res.status(500).json({ error: "Failed to save the URL. Please try again." });
     }
 
     res.json({ id, originalUrl: url });
