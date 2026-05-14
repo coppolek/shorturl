@@ -2,20 +2,20 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copia i file delle dipendenze
+# Copy package files
 COPY package*.json ./
 
-# Installa tutte le dipendenze
+# Install dependencies
 RUN npm install
 
-# Copia tutto il codice dell'app
+# Copy all project files
 COPY . .
 
-# Effettua la build sia del frontend React (in dist/) sia del server Node.js (in dist/server.cjs)
+# Build the project (creates dist/ folder and dist/server.cjs)
 RUN npm run build
 
-# Esponi la porta corretta
+# Expose the API port
 EXPOSE 3000
 
-# Avvia il server backend Node (che a sua volta eroga sia le API che il frontend)
+# Start the Node.js production server
 CMD ["npm", "run", "start"]
