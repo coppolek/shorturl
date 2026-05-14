@@ -1,0 +1,6 @@
+{
+  "name": "Puulp.it",
+  "description": "A URL shortener that monetizes links by showing an interstitial page with AdSense before redirecting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

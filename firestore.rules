@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // API server acts as an unauthenticated client right now
+    // In production, we should restrict this based on IP or use firebase-admin
+    match /links/{linkId} {
+      allow read, write: if true; 
+    }
+  }
+}
