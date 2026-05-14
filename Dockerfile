@@ -11,11 +11,11 @@ RUN npm install
 # Copia tutto il resto del codice sorgente
 COPY . .
 
-# Compila il progetto
+# Compila l'app e il backend
 RUN npm run build
 
-# Esponi la porta interna usata dal nostro server Express
+# Esponi la porta 3000 del server
 EXPOSE 3000
 
-# Avvia il server Node.js
+# Avvia il server backend con frontend integrato
 CMD ["npm", "run", "start"]
