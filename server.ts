@@ -51,6 +51,10 @@ async function fetchMetadata(url: string) {
     const title = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
     let image = $('meta[property="og:image"]').attr('content') || '';
     const description = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+    const twitterTitle = $('meta[name="twitter:title"]').attr('content') || '';
+    const twitterDescription = $('meta[name="twitter:description"]').attr('content') || '';
+    let twitterImage = $('meta[name="twitter:image"]').attr('content') || '';
+    const twitterCard = $('meta[name="twitter:card"]').attr('content') || '';
     
     let domain = '';
     try {
@@ -64,11 +68,48 @@ async function fetchMetadata(url: string) {
           image = `${parsedUrl.protocol}//${parsedUrl.host}/${image}`;
         }
       }
+      
+      if (twitterImage && !twitterImage.startsWith('http')) {
+        if (twitterImage.startsWith('/')) {
+          twitterImage = `${parsedUrl.protocol}//${parsedUrl.host}${twitterImage}`;
+        } else {
+          twitterImage = `${parsedUrl.protocol}//${parsedUrl.host}/${twitterImage}`;
+        }
+      }
     } catch(e) {}
     
-    const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    let faviconUrl = '';
+    const faviconTag = $('link[rel="icon"]').attr('href') || $('link[rel="shortcut icon"]').attr('href') || $('link[rel="apple-touch-icon"]').attr('href');
+    if (faviconTag) {
+      if (faviconTag.startsWith('http')) {
+        faviconUrl = faviconTag;
+      } else if (faviconTag.startsWith('//')) {
+        faviconUrl = `https:${faviconTag}`;
+      } else if (domain) {
+        try {
+          const parsedUrl = new URL(url);
+          if (faviconTag.startsWith('/')) {
+            faviconUrl = `${parsedUrl.protocol}//${parsedUrl.host}${faviconTag}`;
+          } else {
+            faviconUrl = `${parsedUrl.protocol}//${parsedUrl.host}/${faviconTag}`;
+          }
+        } catch(e) {}
+      }
+    }
     
-    return { title: title.trim(), image, description: description.trim(), domain, favicon };
+    const favicon = faviconUrl || (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : '');
+    
+    return { 
+      title: title.trim(), 
+      image, 
+      description: description.trim(), 
+      domain, 
+      favicon,
+      twitterTitle: twitterTitle.trim(),
+      twitterDescription: twitterDescription.trim(),
+      twitterImage,
+      twitterCard: twitterCard.trim()
+    };
   } catch (error) {
     let domain = '';
     try {
@@ -294,8 +335,11 @@ async function startServer() {
         } else {
           $('head').append(`<meta property="og:title" content="${metadata.title}">`);
         }
+      }
+      
+      const tTitle = metadata.twitterTitle || metadata.title;
+      if (tTitle) {
         $('meta[name="twitter:title"]').remove();
-        const tTitle = metadata.twitterTitle || metadata.title;
         $('head').append(`<meta name="twitter:title" content="${tTitle}">`);
       }
       
@@ -310,8 +354,11 @@ async function startServer() {
         } else {
           $('head').append(`<meta property="og:description" content="${metadata.description}">`);
         }
+      }
+      
+      const tDesc = metadata.twitterDescription || metadata.description;
+      if (tDesc) {
         $('meta[name="twitter:description"]').remove();
-        const tDesc = metadata.twitterDescription || metadata.description;
         $('head').append(`<meta name="twitter:description" content="${tDesc}">`);
       }
       
@@ -321,12 +368,28 @@ async function startServer() {
         } else {
           $('head').append(`<meta property="og:image" content="${metadata.image}">`);
         }
-        $('meta[name="twitter:card"]').remove();
+      } else {
+        $('meta[property="og:image"]').remove(); // Remove default layout image if original has none
+      }
+      
+      const tImage = metadata.twitterImage || metadata.image;
+      if (tImage) {
         $('meta[name="twitter:image"]').remove();
-        const tImage = metadata.twitterImage || metadata.image;
-        const tCard = metadata.twitterCard || 'summary_large_image';
-        $('head').append(`<meta name="twitter:card" content="${tCard}">`);
         $('head').append(`<meta name="twitter:image" content="${tImage}">`);
+      } else {
+        $('meta[name="twitter:image"]').remove();
+      }
+      
+      const tCard = metadata.twitterCard || 'summary_large_image';
+      if (tCard) {
+        $('meta[name="twitter:card"]').remove();
+        $('head').append(`<meta name="twitter:card" content="${tCard}">`);
+      }
+      
+      if (metadata.favicon) {
+        $('link[rel="icon"]').remove();
+        $('link[rel="shortcut icon"]').remove();
+        $('head').append(`<link rel="icon" href="${metadata.favicon}">`);
       }
       
       res.status(200).set({ 'Content-Type': 'text/html' }).end($.html());
