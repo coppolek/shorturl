@@ -146,7 +146,8 @@ async function startServer() {
       twitterDescription,
       twitterImage,
       twitterCard,
-      hashtags
+      hashtags,
+      category
     } = req.body;
     
     if (!url || typeof url !== 'string' || !url.startsWith('http')) {
@@ -163,7 +164,8 @@ async function startServer() {
       ...(twitterDescription ? { twitterDescription } : {}),
       ...(twitterImage ? { twitterImage } : {}),
       ...(twitterCard ? { twitterCard } : {}),
-      ...(hashtags ? { hashtags } : {})
+      ...(hashtags ? { hashtags } : {}),
+      ...(category ? { category } : {})
     };
 
     const id = generateId();
