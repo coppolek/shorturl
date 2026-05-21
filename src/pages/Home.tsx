@@ -12,6 +12,7 @@ export default function Home() {
   const [twitterDescription, setTwitterDescription] = useState('');
   const [twitterImage, setTwitterImage] = useState('');
   const [twitterCard, setTwitterCard] = useState('summary_large_image');
+  const [hashtags, setHashtags] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [shortenedUrls, setShortenedUrls] = useState<any[]>([]);
@@ -62,7 +63,8 @@ export default function Home() {
           twitterTitle: twitterTitle.trim() || undefined,
           twitterDescription: twitterDescription.trim() || undefined,
           twitterImage: twitterImage.trim() || undefined,
-          twitterCard: twitterCard.trim() || undefined
+          twitterCard: twitterCard.trim() || undefined,
+          hashtags: hashtags.trim() || undefined
         }),
       });
       
@@ -86,6 +88,7 @@ export default function Home() {
         setTwitterDescription('');
         setTwitterImage('');
         setTwitterCard('summary_large_image');
+        setHashtags('');
         setShowAdvanced(false);
         
         const newIds = [data.id, ...localLinkIds.filter(id => id !== data.id)];
@@ -243,6 +246,20 @@ export default function Home() {
                     />
                   </label>
                 </div>
+                <h3 className="font-medium tracking-tight text-neutral-900 border-b pb-2 pt-2">Social Sharing</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block sm:col-span-2">
+                    <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Hashtags (Comma separated)</span>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. awesome, monetize, link" 
+                      value={hashtags}
+                      onChange={e => setHashtags(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                    />
+                  </label>
+                </div>
+
                 <p className="text-xs text-neutral-500">If any of these fields are left blank, it will fall back to Open Graph values, or automatically fetch from the original URL if possible.</p>
               </div>
             )}
@@ -272,6 +289,10 @@ export default function Home() {
             <div className="grid gap-3">
               {shortenedUrls.map((link) => {
                 const shortUrl = `${appUrl}/${link.id}`;
+                const tweetText = link.metadata?.twitterDescription || link.metadata?.description || link.metadata?.title || 'Check this out!';
+                const hashtagsParams = link.metadata?.hashtags ? `&hashtags=${encodeURIComponent(link.metadata.hashtags.replace(/\s+/g, ''))}` : '';
+                const twitterHref = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shortUrl)}&text=${encodeURIComponent(tweetText)}${hashtagsParams}`;
+                
                 return (
                   <div key={link.id} className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-neutral-300 transition-colors">
                     <div className="flex-1 min-w-0 flex items-start sm:items-center gap-4">
@@ -316,7 +337,7 @@ export default function Home() {
                       </div>
                       <div className="flex items-center gap-1 sm:gap-2">
                         <a 
-                          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shortUrl)}&text=${encodeURIComponent('Check this out!')}`}
+                          href={twitterHref}
                           target="_blank"
                           rel="noreferrer"
                           className="p-2 sm:p-2 text-neutral-500 hover:text-[#1DA1F2] hover:bg-neutral-100 rounded-lg transition-colors flex-shrink-0"

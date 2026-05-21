@@ -145,7 +145,8 @@ async function startServer() {
       twitterTitle,
       twitterDescription,
       twitterImage,
-      twitterCard
+      twitterCard,
+      hashtags
     } = req.body;
     
     if (!url || typeof url !== 'string' || !url.startsWith('http')) {
@@ -161,7 +162,8 @@ async function startServer() {
       ...(twitterTitle ? { twitterTitle } : {}),
       ...(twitterDescription ? { twitterDescription } : {}),
       ...(twitterImage ? { twitterImage } : {}),
-      ...(twitterCard ? { twitterCard } : {})
+      ...(twitterCard ? { twitterCard } : {}),
+      ...(hashtags ? { hashtags } : {})
     };
 
     const id = generateId();
@@ -304,7 +306,32 @@ async function startServer() {
     }
 
     if (!linkData || !linkData.metadata) {
-      return next(); // Fallback to normal SPA delivery
+      const errorHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link Not Found - Puulp.it</title>
+  <meta name="description" content="The requested link was not found or is invalid.">
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f9fafb; color: #111827; }
+    .container { text-align: center; max-width: 28rem; padding: 2rem; background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+    h1 { margin-top: 0; font-size: 1.5rem; font-weight: 600; }
+    p { color: #4b5563; margin-bottom: 1.5rem; }
+    a { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; background-color: #111827; color: white; text-decoration: none; border-radius: 0.5rem; font-weight: 500; transition: background-color 0.2s; }
+    a:hover { background-color: #374151; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Link Not Found</h1>
+    <p>The link you are trying to access doesn't exist, has expired, or is invalid.</p>
+    <a href="/">Go to Homepage</a>
+  </div>
+</body>
+</html>`;
+      return res.status(404).set({ 'Content-Type': 'text/html' }).send(errorHtml);
     }
 
     const { metadata } = linkData;
