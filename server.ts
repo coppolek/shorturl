@@ -49,12 +49,21 @@ async function fetchMetadata(url: string) {
     const $ = cheerio.load(html);
     
     const title = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
-    const image = $('meta[property="og:image"]').attr('content') || '';
+    let image = $('meta[property="og:image"]').attr('content') || '';
     const description = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
     
     let domain = '';
     try {
-      domain = new URL(url).hostname;
+      const parsedUrl = new URL(url);
+      domain = parsedUrl.hostname;
+      
+      if (image && !image.startsWith('http')) {
+        if (image.startsWith('/')) {
+          image = `${parsedUrl.protocol}//${parsedUrl.host}${image}`;
+        } else {
+          image = `${parsedUrl.protocol}//${parsedUrl.host}/${image}`;
+        }
+      }
     } catch(e) {}
     
     const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
@@ -87,12 +96,19 @@ async function startServer() {
 
   // API routes FIRST
   app.post("/api/shorten", async (req, res) => {
-    const { url } = req.body;
+    const { url, customTitle, customDescription, customImage } = req.body;
     if (!url || typeof url !== 'string' || !url.startsWith('http')) {
       return res.status(400).json({ error: "Invalid URL. Must start with http or https." });
     }
 
-    const metadata = await fetchMetadata(url);
+    const fetchedMetadata = await fetchMetadata(url);
+    const metadata = {
+      ...fetchedMetadata,
+      ...(customTitle ? { title: customTitle } : {}),
+      ...(customDescription ? { description: customDescription } : {}),
+      ...(customImage ? { image: customImage } : {})
+    };
+
     const id = generateId();
     
     try {
@@ -248,6 +264,14 @@ async function startServer() {
       }
 
       const $ = cheerio.load(template);
+      const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+      
+      // Inject primary URL tag
+      if ($('meta[property="og:url"]').length) {
+        $('meta[property="og:url"]').attr('content', fullUrl);
+      } else {
+        $('head').append(`<meta property="og:url" content="${fullUrl}">`);
+      }
       
       if (metadata.title) {
         $('title').text(metadata.title);

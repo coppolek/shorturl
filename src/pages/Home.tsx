@@ -5,6 +5,10 @@ import { cn } from '../lib/utils';
 
 export default function Home() {
   const [url, setUrl] = useState('');
+  const [customTitle, setCustomTitle] = useState('');
+  const [customDescription, setCustomDescription] = useState('');
+  const [customImage, setCustomImage] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [shortenedUrls, setShortenedUrls] = useState<any[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -46,7 +50,12 @@ export default function Home() {
       const res = await fetch('/api/shorten', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ 
+          url,
+          customTitle: customTitle.trim() || undefined,
+          customDescription: customDescription.trim() || undefined,
+          customImage: customImage.trim() || undefined
+        }),
       });
       
       let data;
@@ -62,6 +71,10 @@ export default function Home() {
         alert(data.error);
       } else {
         setUrl('');
+        setCustomTitle('');
+        setCustomDescription('');
+        setCustomImage('');
+        setShowAdvanced(false);
         
         const newIds = [data.id, ...localLinkIds.filter(id => id !== data.id)];
         setLocalLinkIds(newIds);
@@ -102,29 +115,78 @@ export default function Home() {
             Create short URLs that show an ad interstitial before redirecting. Monetize your traffic effortlessly while providing a reliable redirection service.
           </p>
 
-          <form onSubmit={handleShorten} className="relative flex flex-col sm:flex-row shadow-sm rounded-xl overflow-hidden sm:bg-white sm:border sm:border-neutral-200 sm:focus-within:ring-2 sm:focus-within:ring-neutral-900 sm:focus-within:border-transparent transition-all gap-3 sm:gap-0 p-1 sm:p-0 bg-transparent border-none">
-            <div className="flex items-center flex-1 bg-white border border-neutral-200 sm:border-none rounded-xl sm:rounded-none focus-within:ring-2 focus-within:ring-neutral-900 sm:focus-within:ring-0">
-              <div className="pl-4 pr-2 text-neutral-400">
-                <LinkIcon className="w-5 h-5" />
+          <form onSubmit={handleShorten} className="bg-transparent border-none">
+            <div className="relative flex flex-col sm:flex-row shadow-sm rounded-xl overflow-hidden sm:bg-white sm:border sm:border-neutral-200 sm:focus-within:ring-2 sm:focus-within:ring-neutral-900 sm:focus-within:border-transparent transition-all gap-3 sm:gap-0 p-1 sm:p-0">
+              <div className="flex items-center flex-1 bg-white border border-neutral-200 sm:border-none rounded-xl sm:rounded-none focus-within:ring-2 focus-within:ring-neutral-900 sm:focus-within:ring-0">
+                <div className="pl-4 pr-2 text-neutral-400">
+                  <LinkIcon className="w-5 h-5" />
+                </div>
+                <input
+                  type="url"
+                  required
+                  placeholder="Paste your long URL here..."
+                  className="w-full py-4 pr-2 outline-none text-neutral-900 placeholder:text-neutral-400 font-medium bg-transparent"
+                  value={url}
+                  onChange={e => setUrl(e.target.value)}
+                  disabled={isLoading}
+                />
               </div>
-              <input
-                type="url"
-                required
-                placeholder="Paste your long URL here..."
-                className="w-full py-4 pr-2 outline-none text-neutral-900 placeholder:text-neutral-400 font-medium bg-transparent"
-                value={url}
-                onChange={e => setUrl(e.target.value)}
-                disabled={isLoading}
-              />
+              <div className="sm:p-2 flex gap-2">
+                <button 
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="px-4 py-4 sm:py-2.5 rounded-xl sm:rounded-lg font-medium text-neutral-600 hover:bg-neutral-100 transition-colors"
+                >
+                  {showAdvanced ? 'Hide Options' : 'Options'}
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 sm:flex-none flex items-center justify-center bg-neutral-900 text-white px-6 py-4 sm:py-2.5 rounded-xl sm:rounded-lg font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50 whitespace-nowrap"
+                >
+                  {isLoading ? 'Shortening...' : 'Shorten'}
+                </button>
+              </div>
             </div>
-            <div className="sm:p-2">
-              <button 
-                disabled={isLoading}
-                className="w-full sm:w-auto flex items-center justify-center bg-neutral-900 text-white px-6 py-4 sm:py-2.5 rounded-xl sm:rounded-lg font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50 whitespace-nowrap"
-              >
-                {isLoading ? 'Shortening...' : 'Shorten'}
-              </button>
-            </div>
+
+            {showAdvanced && (
+              <div className="mt-4 p-5 bg-white border border-neutral-200 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                <h3 className="font-medium tracking-tight text-neutral-900">Custom Social Preview Attributes</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Title (og:title)</span>
+                    <input 
+                      type="text" 
+                      placeholder="Custom link title" 
+                      value={customTitle}
+                      onChange={e => setCustomTitle(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Image URL (og:image)</span>
+                    <input 
+                      type="url" 
+                      placeholder="https://example.com/image.png" 
+                      value={customImage}
+                      onChange={e => setCustomImage(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                    />
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Description (og:description)</span>
+                    <textarea 
+                      placeholder="A short description summarizing the link." 
+                      value={customDescription}
+                      onChange={e => setCustomDescription(e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all resize-none"
+                    />
+                  </label>
+                </div>
+                <p className="text-xs text-neutral-500">If left blank, these fields will be automatically fetched from the original URL if possible.</p>
+              </div>
+            )}
           </form>
         </div>
 
