@@ -8,6 +8,10 @@ export default function Home() {
   const [customTitle, setCustomTitle] = useState('');
   const [customDescription, setCustomDescription] = useState('');
   const [customImage, setCustomImage] = useState('');
+  const [twitterTitle, setTwitterTitle] = useState('');
+  const [twitterDescription, setTwitterDescription] = useState('');
+  const [twitterImage, setTwitterImage] = useState('');
+  const [twitterCard, setTwitterCard] = useState('summary_large_image');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [shortenedUrls, setShortenedUrls] = useState<any[]>([]);
@@ -54,7 +58,11 @@ export default function Home() {
           url,
           customTitle: customTitle.trim() || undefined,
           customDescription: customDescription.trim() || undefined,
-          customImage: customImage.trim() || undefined
+          customImage: customImage.trim() || undefined,
+          twitterTitle: twitterTitle.trim() || undefined,
+          twitterDescription: twitterDescription.trim() || undefined,
+          twitterImage: twitterImage.trim() || undefined,
+          twitterCard: twitterCard.trim() || undefined
         }),
       });
       
@@ -74,6 +82,10 @@ export default function Home() {
         setCustomTitle('');
         setCustomDescription('');
         setCustomImage('');
+        setTwitterTitle('');
+        setTwitterDescription('');
+        setTwitterImage('');
+        setTwitterCard('summary_large_image');
         setShowAdvanced(false);
         
         const newIds = [data.id, ...localLinkIds.filter(id => id !== data.id)];
@@ -150,8 +162,8 @@ export default function Home() {
             </div>
 
             {showAdvanced && (
-              <div className="mt-4 p-5 bg-white border border-neutral-200 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                <h3 className="font-medium tracking-tight text-neutral-900">Custom Social Preview Attributes</h3>
+              <div className="mt-4 p-5 bg-white border border-neutral-200 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 text-left">
+                <h3 className="font-medium tracking-tight text-neutral-900 border-b pb-2">Custom Social Preview Attributes (Open Graph)</h3>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Title (og:title)</span>
@@ -184,7 +196,54 @@ export default function Home() {
                     />
                   </label>
                 </div>
-                <p className="text-xs text-neutral-500">If left blank, these fields will be automatically fetched from the original URL if possible.</p>
+                
+                <h3 className="font-medium tracking-tight text-neutral-900 border-b pb-2 pt-2">X / Twitter Preview Attributes (Twitter Cards)</h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Card Type (twitter:card)</span>
+                    <select 
+                      value={twitterCard}
+                      onChange={e => setTwitterCard(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                    >
+                      <option value="summary_large_image">Summary Large Image</option>
+                      <option value="summary">Summary</option>
+                      <option value="app">App</option>
+                      <option value="player">Player</option>
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Title (twitter:title)</span>
+                    <input 
+                      type="text" 
+                      placeholder="Overrides og:title if set" 
+                      value={twitterTitle}
+                      onChange={e => setTwitterTitle(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                    />
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Description (twitter:description)</span>
+                    <textarea 
+                      placeholder="Overrides og:description if set" 
+                      value={twitterDescription}
+                      onChange={e => setTwitterDescription(e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all resize-none"
+                    />
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="text-sm font-medium text-neutral-600 mb-1.5 block">Image URL (twitter:image)</span>
+                    <input 
+                      type="url" 
+                      placeholder="Overrides og:image if set" 
+                      value={twitterImage}
+                      onChange={e => setTwitterImage(e.target.value)}
+                      className="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all"
+                    />
+                  </label>
+                </div>
+                <p className="text-xs text-neutral-500">If any of these fields are left blank, it will fall back to Open Graph values, or automatically fetch from the original URL if possible.</p>
               </div>
             )}
           </form>

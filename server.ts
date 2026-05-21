@@ -96,7 +96,17 @@ async function startServer() {
 
   // API routes FIRST
   app.post("/api/shorten", async (req, res) => {
-    const { url, customTitle, customDescription, customImage } = req.body;
+    const { 
+      url, 
+      customTitle, 
+      customDescription, 
+      customImage,
+      twitterTitle,
+      twitterDescription,
+      twitterImage,
+      twitterCard
+    } = req.body;
+    
     if (!url || typeof url !== 'string' || !url.startsWith('http')) {
       return res.status(400).json({ error: "Invalid URL. Must start with http or https." });
     }
@@ -106,7 +116,11 @@ async function startServer() {
       ...fetchedMetadata,
       ...(customTitle ? { title: customTitle } : {}),
       ...(customDescription ? { description: customDescription } : {}),
-      ...(customImage ? { image: customImage } : {})
+      ...(customImage ? { image: customImage } : {}),
+      ...(twitterTitle ? { twitterTitle } : {}),
+      ...(twitterDescription ? { twitterDescription } : {}),
+      ...(twitterImage ? { twitterImage } : {}),
+      ...(twitterCard ? { twitterCard } : {})
     };
 
     const id = generateId();
@@ -281,7 +295,8 @@ async function startServer() {
           $('head').append(`<meta property="og:title" content="${metadata.title}">`);
         }
         $('meta[name="twitter:title"]').remove();
-        $('head').append(`<meta name="twitter:title" content="${metadata.title}">`);
+        const tTitle = metadata.twitterTitle || metadata.title;
+        $('head').append(`<meta name="twitter:title" content="${tTitle}">`);
       }
       
       if (metadata.description) {
@@ -296,7 +311,8 @@ async function startServer() {
           $('head').append(`<meta property="og:description" content="${metadata.description}">`);
         }
         $('meta[name="twitter:description"]').remove();
-        $('head').append(`<meta name="twitter:description" content="${metadata.description}">`);
+        const tDesc = metadata.twitterDescription || metadata.description;
+        $('head').append(`<meta name="twitter:description" content="${tDesc}">`);
       }
       
       if (metadata.image) {
@@ -307,8 +323,10 @@ async function startServer() {
         }
         $('meta[name="twitter:card"]').remove();
         $('meta[name="twitter:image"]').remove();
-        $('head').append(`<meta name="twitter:card" content="summary_large_image">`);
-        $('head').append(`<meta name="twitter:image" content="${metadata.image}">`);
+        const tImage = metadata.twitterImage || metadata.image;
+        const tCard = metadata.twitterCard || 'summary_large_image';
+        $('head').append(`<meta name="twitter:card" content="${tCard}">`);
+        $('head').append(`<meta name="twitter:image" content="${tImage}">`);
       }
       
       res.status(200).set({ 'Content-Type': 'text/html' }).end($.html());
